@@ -1,0 +1,32 @@
+
+- hosts: all
+  tasks:
+
+  - name: install sudo
+    become: true
+    apt:
+      name: sudo
+      state: present
+
+  - name: add ansible user
+    become: true
+    user:
+      name: "{{ ansible_user_name }}"
+      password: "{{ ansible_password_hash }}"
+      groups: sudo
+
+  - name: add authorized key
+    become: true
+    authorized_key:
+      user: "{{ ansible_user_name }}"
+      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+  - name: Allow ansible to use sudo without password
+    become: true
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      line: 'ansible ALL = NOPASSWD: ALL'
+      validate: '/usr/sbin/visudo -cf %s'
+
+
